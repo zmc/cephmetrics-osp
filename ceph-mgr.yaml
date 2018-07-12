@@ -60,6 +60,7 @@ outputs:
             '113 ceph_mgr':
               dport:
               - '6800-7300'
+              - '9283'
         - ceph_mgr_ansible_vars:
             map_merge:
             - {get_attr: [CephBase, role_data, config_settings, ceph_common_ansible_vars]}
