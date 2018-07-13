@@ -55,12 +55,13 @@
   name: Configure /etc/hosts
   tasks:
     - shell: grep $(hostname).ctlplane /etc/hosts|awk '{print $1, $3}'|sed 's/\.ctlplane//g'
-      register: osd_etc_hostnames
-    - name: Append MON hostnames and IPs to /etc/hosts
+      register: hostnames
+    - name: Append hostnames and IPs to /etc/hosts
       lineinfile:
         line: "{{ item }}"
         dest: "/etc/hosts"
         insertafter: EOF
+        regexp: "^.* {{ item.split(' ')[1] }}"
       delegate_to: localhost
       become: true
-      with_items: "{{ osd_etc_hostnames.stdout }}"
+      with_items: "{{ hostnames.stdout }}"
