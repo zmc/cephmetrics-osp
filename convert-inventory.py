@@ -5,6 +5,7 @@ import yaml
 GROUP_MAP = dict(
   Controller=['mons', 'mgrs'],
   CephStorage=['osds'],
+  Compute=['iscsis'],
 )
 
 
