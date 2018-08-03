@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import json
 import yaml
 
 GROUP_MAP = dict(
@@ -21,6 +22,20 @@ def parse_args():
         default="ansible",
     )
     return parser.parse_args()
+
+
+def load_file(path):
+    ext = None
+    if '.' in path:
+        ext = path.split('.')[-1]
+    with open(path) as f:
+        contents = f.read()
+    if ext in ('yaml', 'yml'):
+        return yaml.safe_load(contents)
+    elif ext in ('json'):
+        return json.loads(contents)
+    elif ext is None:
+        raise NotImplementedError
 
 
 def get_inventory(orig_obj, group_map):
@@ -86,8 +101,7 @@ def format_hosts_yaml(inventory_obj):
 if __name__ == "__main__":
     args = parse_args()
 
-    with open(args.file[0]) as f:
-        orig_obj = yaml.safe_load(f)
+    orig_obj = load_file(args.file[0])
 
     inv = get_inventory(orig_obj, GROUP_MAP)
     if args.format == "ansible":
