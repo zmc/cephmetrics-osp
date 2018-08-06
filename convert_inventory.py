@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import json
+import os
 import yaml
 
 
@@ -20,6 +21,11 @@ def parse_args():
         choices=["hosts", "hosts_yaml", "raw", "yaml"],
         default="yaml",
     )
+    parser.add_argument(
+        "-a", "--add-host",
+        help="Optionally add a host to the inventory using information in"
+             "create.sh format",
+    )
     return parser.parse_args()
 
 
@@ -31,8 +37,13 @@ def load_file(path):
         contents = f.read()
     if ext in ('yaml', 'yml'):
         return yaml.safe_load(contents)
-    elif ext in ('json'):
+    elif ext == 'json':
         return json.loads(contents)
+    elif ext == 'conf':
+        return dict(map(
+            lambda s: s.split('='),
+            contents.strip().split('\n'),
+        ))
     elif ext is None:
         raise NotImplementedError
 
@@ -91,6 +102,24 @@ def format_hosts_yaml(inventory_obj):
     )
 
 
+def add_host(inventory, host_conf):
+    host_obj = dict(
+        ansible_host=host_conf['FLOAT_IP'],
+        ansible_ssh_common_args="-o StrictHostKeyChecking=no "
+                                "-o UserKnownHostsFile=/dev/null",
+        ansible_ssh_private_key_file=os.path.expanduser(
+            '~/%s.pem' % host_conf['KEYPAIR_NAME']),
+        ansible_ssh_user=host_conf['USER_NAME'],
+    )
+    server_name = host_conf['SERVER_NAME']
+    inventory.setdefault('all', dict()).\
+        setdefault('hosts', dict())[server_name] = host_obj
+    group_name = host_conf.get('GROUP_NAME', 'ceph-grafana')
+    inventory.setdefault(group_name, dict()).\
+        setdefault('hosts', dict())[server_name] = dict()
+    return inventory
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -100,6 +129,10 @@ if __name__ == "__main__":
         inv = simplify_tripleo_inventory(orig_obj)
     elif args.input_format == "ceph-ansible":
         inv = orig_obj
+
+    if args.add_host:
+        new_host_conf = load_file(args.add_host)
+        add_host(inv, new_host_conf)
 
     if args.format == "yaml":
         print yaml.safe_dump(inv, default_flow_style=False)
