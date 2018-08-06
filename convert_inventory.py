@@ -120,6 +120,16 @@ def add_host(inventory, host_conf):
     return inventory
 
 
+def add_vars(inventory):
+    etc_hosts = format_hosts_dict(inventory)
+    inventory.setdefault('all', dict()).\
+        setdefault('vars', dict()).\
+        setdefault('prometheus', dict())['etc_hosts'] = etc_hosts
+    inventory['all']['vars'].\
+        setdefault('grafana', dict())['admin_password'] = 'admin'
+    return inventory
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -133,6 +143,8 @@ if __name__ == "__main__":
     if args.add_host:
         new_host_conf = load_file(args.add_host)
         add_host(inv, new_host_conf)
+
+    add_vars(inv)
 
     if args.format == "yaml":
         print yaml.safe_dump(inv, default_flow_style=False)
