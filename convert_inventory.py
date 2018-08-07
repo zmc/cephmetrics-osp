@@ -55,7 +55,7 @@ def simplify_tripleo_inventory(orig_obj):
       Compute=['iscsis'],
     )
     new_obj = dict(
-        ungrouped=dict(),
+        all=dict(),
     )
     for orig_group_name, new_group_names in group_map.items():
         orig_group = orig_obj.get(orig_group_name)
@@ -64,7 +64,7 @@ def simplify_tripleo_inventory(orig_obj):
         ips = dict()
         for child_name in orig_group['children'].keys():
             ips[child_name] = orig_obj[child_name]['vars']['ctlplane_ip']
-            new_obj['ungrouped'][child_name] = dict(
+            new_obj['all'][child_name] = dict(
                 ansible_host=ips[child_name],
                 ansible_ssh_user='heat-admin',
             )
