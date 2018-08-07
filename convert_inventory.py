@@ -77,7 +77,7 @@ def simplify_tripleo_inventory(orig_obj):
 def format_hosts_dict(inventory_obj):
     hosts_obj = dict()
     for group_name, group in inventory_obj.items():
-        for host_name, host in group.items():
+        for host_name, host in group.get('hosts', dict()).items():
             if 'ansible_host' in host:
                 hosts_obj[host_name] = host['ansible_host']
     return hosts_obj
